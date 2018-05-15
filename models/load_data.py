@@ -1,3 +1,4 @@
+"""load_data module"""
 from argparse import ArgumentParser
 import os
 import yaml
@@ -7,7 +8,7 @@ import tensorflow.contrib.slim as slim
 
 
 def get_batch(param_dict=params.default_param_dict(), shuffled=True):
-    # uses batch_size, data_dir, data_mode, data_serialized, out_label_count
+    """ uses batch_size, data_dir, data_mode, data_serialized """
 
     batch_size = param_dict["batch_size"]
     all_files = sorted(os.listdir(param_dict["data_dir"]))
@@ -105,16 +106,15 @@ def get_batch(param_dict=params.default_param_dict(), shuffled=True):
         features = tf.slice(features, [input_size], [input_size])
     #features.set_shape([input_size])
     param_dict['input_size'] = input_size
-    label_one_hot = tf.one_hot(label, depth=param_dict['out_label_count'], on_value=1, off_value=0)
+
 
     print("orig input_size: " + str(data_dict['class_column']-1))
     print("final input_size: " + str(input_size))
-    print("size of label_one_hot: " + str(label_one_hot))
 
 
     # create batch
     if shuffled:
-        feat_b, label_b, meta_b = tf.train.shuffle_batch([features, label_one_hot, metadata],
+        feat_b, label_b, meta_b = tf.train.shuffle_batch([features, label, metadata],
                                                          batch_size=batch_size,
                                                          num_threads=nthreads,
                                                          capacity=32*batch_size,
@@ -122,7 +122,7 @@ def get_batch(param_dict=params.default_param_dict(), shuffled=True):
                                                          seed=19850411,
                                                          allow_smaller_final_batch=True)
     else:
-        feat_b, label_b, meta_b = tf.train.batch([features, label_one_hot, metadata],
+        feat_b, label_b, meta_b = tf.train.batch([features, label, metadata],
                                                  batch_size=batch_size,
                                                  num_threads=1,
                                                  capacity=batch_size,
@@ -132,6 +132,7 @@ def get_batch(param_dict=params.default_param_dict(), shuffled=True):
 
 
 def load_data_test():
+    """test for load_data module"""
     parser = ArgumentParser()
     parser = params.add_trainer_args(parser)
     param_dict = vars(parser.parse_args())
@@ -144,9 +145,10 @@ def load_data_test():
         # initialize the queue threads to start to shovel data
         coord = tf.train.Coordinator()
         threads = tf.train.start_queue_runners(coord=coord)
-        print("feat_batch, onehot_label_batch, meta_batch: ")
-        for i in range(param_dict["train_max_steps"]):
-            print(i)
+        print("feat_batch, label_batch, meta_batch: ")
+        for step in range(param_dict["train_max_steps"]):
+            print("train_step: " + str(step))
+            print(step)
             print(sess.run([feat_b, label_b, meta_b]))
         # We request our child threads to stop ...
         coord.request_stop()

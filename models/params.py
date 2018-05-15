@@ -32,40 +32,6 @@ def add_data_params(parser):
     return parser
 
 
-DEFAULT_MAX_STEPS = 100000
-DEFAULT_STEPS_PER_SAVE = 50000
-DEFAULT_OPTIMIZER_STR = "Adam"
-DEFAULT_LEARNING_RATE = "0.0001"
-def add_train_params(parser):
-    """define training parameters"""
-    parser.add_argument('--train_max_steps', type=int, default=DEFAULT_MAX_STEPS,
-                        help='Number of steps to run trainer')
-    parser.add_argument('--train_steps_per_save', type=int, default=DEFAULT_STEPS_PER_SAVE,
-                        help='Number of steps to run trainer before saving')
-    parser.add_argument('--train_optimizer_str', type=str, default=DEFAULT_OPTIMIZER_STR,
-                        help='Optimizer function')
-    parser.add_argument('--training', dest='training', default=False,
-                        action='store_true', help='Mark if training model')
-    parser.add_argument('--train_learning_rate', type=float, default=DEFAULT_LEARNING_RATE,
-                        help='Initial learning rate')
-    return parser
-
-DEFAULT_KL_SPARCITY = 0.2
-def add_regularization_params(parser):
-    """define regularization parameters"""
-    parser.add_argument('--reg_do_keep_prob', type=float, default=1.0,
-                        help='Keep probability for training dropout')
-    parser.add_argument('--reg_kl_sparsity', type=float, default=DEFAULT_KL_SPARCITY,
-                        help='Probability for activation of neuron')
-    parser.add_argument('--reg_kl_scale', type=float, default=0,
-                        help='Regulariztion scalar for KL activation loss')
-    parser.add_argument('--reg_l1_scale', type=float, default=0,
-                        help='Regulariztion scalar for L1 weights loss')
-    parser.add_argument('--reg_l2_scale', type=float, default=0,
-                        help='Regulariztion scalar for L2 weights loss')
-    return parser
-
-
 DEFAULT_ACTV_STR = 'sigmoid'
 DEFAULT_CONV_DEPTH = 0
 def add_conv_params(parser):
@@ -106,6 +72,41 @@ def add_outlayer_params(parser):
     return parser
 
 
+DEFAULT_KL_SPARCITY = 0.2
+def add_regularization_params(parser):
+    """define regularization parameters"""
+    parser.add_argument('--reg_do_keep_prob', type=float, default=1.0,
+                        help='Keep probability for training dropout')
+    parser.add_argument('--reg_kl_sparsity', type=float, default=DEFAULT_KL_SPARCITY,
+                        help='Probability for activation of neuron')
+    parser.add_argument('--reg_kl_scale', type=float, default=0,
+                        help='Regulariztion scalar for KL activation loss')
+    parser.add_argument('--reg_l1_scale', type=float, default=0,
+                        help='Regulariztion scalar for L1 weights loss')
+    parser.add_argument('--reg_l2_scale', type=float, default=0,
+                        help='Regulariztion scalar for L2 weights loss')
+    return parser
+
+
+DEFAULT_MAX_STEPS = 100000
+DEFAULT_SECS_PER_SAVE = 600
+DEFAULT_OPTIMIZER_STR = "Adam"
+DEFAULT_LEARNING_RATE = "0.0001"
+def add_train_params(parser):
+    """define training parameters"""
+    parser.add_argument('--train_max_steps', type=int, default=DEFAULT_MAX_STEPS,
+                        help='Number of steps to run trainer')
+    parser.add_argument('--train_save_ckpt_secs', type=int, default=DEFAULT_SECS_PER_SAVE,
+                        help='Number of seconds to run trainer before saving ckpt')
+    parser.add_argument('--train_optimizer_str', type=str, default=DEFAULT_OPTIMIZER_STR,
+                        help='Optimizer function')
+    parser.add_argument('--training', dest='training', default=False,
+                        action='store_true', help='Mark if training model')
+    parser.add_argument('--train_learning_rate', type=float, default=DEFAULT_LEARNING_RATE,
+                        help='Initial learning rate')
+    return parser
+
+
 DEFAULT_EVAL_MODE = 'summary'
 DEFAULT_EVAL_INTERVAL = 120
 def add_eval_params(parser):
@@ -133,6 +134,8 @@ def add_trainer_args(parser):
     group6 = add_fcs_params(group6)
     group7 = parser.add_argument_group('output_layer parameters')
     group7 = add_outlayer_params(group7)
+    group8 = parser.add_argument_group('evaluation and summary parameters')
+    group8 = add_eval_params(group8)
     return parser
 
 

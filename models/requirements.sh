@@ -1,1 +1,2 @@
 pip install pyyaml
+source activate tensorflow_p36
