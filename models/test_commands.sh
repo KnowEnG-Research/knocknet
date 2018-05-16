@@ -2,6 +2,7 @@
 LOAD_TESTS=0
 MODEL_TESTS=0
 TRAIN_TESTS=1
+TEST_TESTS=1
 
 . assert.sh
 
@@ -95,8 +96,9 @@ CMD="python3 models.py --data_dir /home/tfuser/data/test_tsv/ --out_label_count 
 
 # 20: check training
 rm -r "$LOGDIR/chkptdir_$TESTCT"
+MYTRAINNUM=$TESTCT
 CMD="python3 train.py --data_dir /home/tfuser/data/test_tsv/ --out_label_count 10 \
-    --chkpt_dir $LOGDIR/chkptdir_$TESTCT --eval_interval_secs 2 --train_save_ckpt_secs 8\
+    --chkpt_dir $LOGDIR/chkptdir_$TESTCT --train_save_summ_secs 4 --train_save_ckpt_secs 8\
     --batch_size 8 --data_mode all --out_actv_str None --train_max_steps 5000 \
     --training --reg_do_keep_prob 0.7 --train_learning_rate 0.1  \
     --fcs_dimension_str 0 --data_batch_norm \
@@ -104,12 +106,23 @@ CMD="python3 train.py --data_dir /home/tfuser/data/test_tsv/ --out_label_count 1
 # echo -e "\n****$TESTCT: $CMD"
 ((TRAIN_TESTS)) && assert_raises "$CMD" && ((TESTCT=TESTCT+1))
 
-# 20-22: check loss functions
+# 21: check testing once through for all run modes
+for RM in stats preds probs; do
+    rm -r "$LOGDIR/chkptdir_$TESTCT"
+    CMD="python3 eval.py --data_dir /home/tfuser/data/test_tsv/ --data_mode all \
+        --chkpt_dir $LOGDIR/chkptdir_$MYTRAINNUM --log_dir $LOGDIR/chkptdir_$MYTRAINNUM/log_$TESTCT \
+        --batch_size 6 --eval_run_mode $RM \
+        &> $LOGDIR/$TESTCT.log"
+    # echo -e "\n****$TESTCT: $CMD"
+    ((TEST_TESTS)) && assert_raises "$CMD" && ((TESTCT=TESTCT+1))
+done
+
+# 21-23: check train loss functions
 for LF in reg_l1_scale reg_l2_scale reg_kl_scale; do
     rm -r "$LOGDIR/chkptdir_$TESTCT"
     CMD="python3 train.py --data_dir /home/tfuser/data/test_tsv/ --out_label_count 10 \
-        --chkpt_dir $LOGDIR/chkptdir_$TESTCT --eval_interval_secs 2 \
-        --batch_size 8 --data_mode all  --train_max_steps 1000 --training --reg_do_keep_prob 0.7 \
+        --chkpt_dir $LOGDIR/chkptdir_$TESTCT --train_save_summ_secs 2 \
+        --batch_size 8 --data_mode all  --train_max_steps 2000 --training --reg_do_keep_prob 0.7 \
         --conv_depth 3 --fcs_dimension_str 5,5 --$LF 2 --data_batch_norm \
         &> $LOGDIR/$TESTCT.log"
     # echo -e "\n****$TESTCT: $CMD"

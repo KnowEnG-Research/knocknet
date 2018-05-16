@@ -19,12 +19,14 @@ def construct_model(param_dict=params.default_param_dict, is_training=True, shuf
     param_dict["input_size"] = input_size
     param_dict["num_metadata"] = num_metadata
     param_dict["num_examples"] = num_examples
-    tf.summary.histogram('data/true_labels', true_labels) #B
-    tf.summary.histogram('data/orig_feat_vals', feat_batch) #BxI
+    tf.summary.histogram('batch_data/true_labels', true_labels) #B
+    tf.summary.histogram('batch_data/orig_feat_vals', feat_batch) #BxI
 
     # input layer
     print("### start model construction")
+    print("model true_labels: " + str(true_labels))
     print("model in_feats_orig: " + str(feat_batch))
+    print("model meta_batch: " + str(meta_batch))
     # Assuming feat_batch inputs are in [batch_size, input_size]
     in_feats_mod = feat_batch
     if param_dict['data_batch_norm']:
@@ -45,7 +47,7 @@ def construct_model(param_dict=params.default_param_dict, is_training=True, shuf
     logits = slim.fully_connected(inputs=fc_outputs, num_outputs=param_dict['out_label_count'],
                                   activation_fn=out_activation_fn)
     print("model logits: " + str(logits))
-    tf.summary.histogram('model/logits', logits) #BxO
+    tf.summary.histogram('batch_model/logits', logits) #BxO
     layers.append(logits)
 
     return param_dict, true_labels, logits, layers, meta_batch
@@ -61,7 +63,7 @@ def build_conv_layer(is_training, in_feats_mod, param_dict):
                                  [param_dict['batch_size'], 2,
                                   int(int(in_feats_mod.shape[1])/2)])
         conv_inputs = tf.transpose(conv_inputs, [0, 2, 1])
-        print("conv reshape: " + str(conv_inputs))
+        print("model conv reshape: " + str(conv_inputs))
         conv_actv_fn = get_act_fn(param_dict['conv_actv_str'])
         if param_dict['conv_gene_pair']:
             conv_outputs = gene_pair_convolution(conv_inputs,
@@ -107,7 +109,7 @@ def build_fc_layers(is_training, conv_outputs, param_dict):
                 num_layer % param_dict['fcs_res_block_size'] == 0):
             # add first layer of the block to current layer
             fc_outputs += layers[block_idx]
-            print("adding layer index " + str(block_idx) +
+            print("model adding layer index " + str(block_idx) +
                   " to fc_output index " + str(num_layer))
             block_idx = num_layer
         if param_dict['fcs_batch_norm']:
@@ -126,12 +128,12 @@ def model_summarize(true_labels, logits, out_label_count):
     """needs true_labels, logits, out_label_count"""
     pred_labels = tf.cast(tf.argmax(logits, 1), tf.int32)
     correct_bool = tf.equal(true_labels, pred_labels)
-    prob_vec = tf.nn.softmax(logits, dim=-1)
+    prob_vec = tf.nn.softmax(logits, axis=-1)
     entropy = tf.reduce_sum(-1.0 * prob_vec * tf.log(prob_vec + 1e-10) /
                             math.log(out_label_count), axis=1)
     true_labels_one_hot = tf.one_hot(true_labels, depth=out_label_count,
                                      on_value=1, off_value=0)
-    pred_labels_one_hot = tf.one_hot(pred_labels, out_label_count,
+    pred_labels_one_hot = tf.one_hot(pred_labels, depth=out_label_count,
                                      on_value=1, off_value=0)
     true_prob_score = tf.reduce_max(tf.multiply(prob_vec,
                                                 tf.cast(true_labels_one_hot, tf.float32)),
@@ -149,25 +151,34 @@ def model_summarize(true_labels, logits, out_label_count):
     # TODO: figure out perc_zero and non-zero-distrib
     # TODO: maybe figure out how to use ranks tf.top_k
     # add summary histograms to summaries
-    tf.summary.histogram('model/pred_labels', pred_labels) #B
-    tf.summary.histogram('scores/prob_vec', prob_vec) #BxO
-    tf.summary.histogram('scores/true_prob_score', true_prob_score) #B
-    tf.summary.histogram('scores/pred_prob_score', pred_prob_score) #B
-    tf.summary.histogram('scores/corr_prob_score', corr_prob_score) #B
-    tf.summary.histogram('scores/incorrect_true_scores', incorrect_true_scores) #B
-    tf.summary.histogram('scores/incorrect_pred_scores', incorrect_pred_scores) #B
-    tf.summary.histogram('entropy/entropy', entropy) #B
-    tf.summary.histogram('entropy/corr_entropy', corr_entropy) #B
-    tf.summary.histogram('entropy/incorrect_entropy', incorrect_entropy) #B
-    tf.summary.scalar('model/num_correct', tf.reduce_sum(tf.cast(correct_bool, tf.float32)))
-    tf.summary.scalar('avg_scores/true_prob_score', tf.reduce_mean(true_prob_score))
-    tf.summary.scalar('avg_scores/pred_prob_score', tf.reduce_mean(pred_prob_score))
-    tf.summary.scalar('avg_scores/corr_prob_score', tf.reduce_mean(corr_prob_score))
-    tf.summary.scalar('avg_scores/incorrect_true_scores', tf.reduce_mean(incorrect_true_scores))
-    tf.summary.scalar('avg_scores/incorrect_pred_scores', tf.reduce_mean(incorrect_pred_scores))
-    tf.summary.scalar('avg_entropy/entropy', tf.reduce_mean(entropy))
-    tf.summary.scalar('avg_entropy/corr_entropy', tf.reduce_mean(corr_entropy))
-    tf.summary.scalar('avg_entropy/incorrect_entropy', tf.reduce_mean(incorrect_entropy))
+    tf.summary.histogram('batch_model/pred_labels', pred_labels) #B
+    tf.summary.histogram('batch_scores/prob_vec', prob_vec) #BxO
+    tf.summary.histogram('batch_scores/true_prob_score', true_prob_score) #B
+    tf.summary.histogram('batch_scores/pred_prob_score', pred_prob_score) #B
+    tf.summary.histogram('batch_scores/corr_prob_score', corr_prob_score) #B
+    tf.summary.histogram('batch_scores/incorrect_true_scores', incorrect_true_scores) #B
+    tf.summary.histogram('batch_scores/incorrect_pred_scores', incorrect_pred_scores) #B
+    tf.summary.histogram('batch_entropy/entropy', entropy) #B
+    tf.summary.histogram('batch_entropy/corr_entropy', corr_entropy) #B
+    tf.summary.histogram('batch_entropy/incorrect_entropy', incorrect_entropy) #B
+    tf.summary.scalar('batch_model/accuracy', (tf.reduce_sum(tf.cast(correct_bool, tf.float32)) /
+                                               tf.cast(tf.shape(correct_bool)[0], tf.float32)))
+    tf.summary.scalar('batch_model/num_correct', tf.reduce_sum(tf.cast(correct_bool, tf.float32)))
+    tf.summary.scalar('batch_avg_scores/true_prob_score', tf.reduce_mean(true_prob_score))
+    tf.summary.scalar('batch_avg_scores/pred_prob_score', tf.reduce_mean(pred_prob_score))
+    tf.summary.scalar('batch_avg_scores/corr_prob_score', tf.reduce_mean(corr_prob_score))
+    tf.summary.scalar('batch_avg_scores/incorrect_true_scores', tf.reduce_mean(incorrect_true_scores))
+    tf.summary.scalar('batch_avg_scores/incorrect_pred_scores', tf.reduce_mean(incorrect_pred_scores))
+    tf.summary.scalar('batch_avg_entropy/entropy', tf.reduce_mean(entropy))
+    tf.summary.scalar('batch_avg_entropy/corr_entropy', tf.reduce_mean(corr_entropy))
+    tf.summary.scalar('batch_avg_entropy/incorrect_entropy', tf.reduce_mean(incorrect_entropy))
+
+    print("metrics pred_labels: " + str(pred_labels))
+    print("metrics correct_bool: " + str(correct_bool))
+    print("metrics prob_vec: " + str(prob_vec))
+    print("metrics entropy: " + str(entropy))
+    print("metrics true_prob_score: " + str(true_prob_score))
+    print("metrics pred_prob_score: " + str(pred_prob_score))
 
     return pred_labels, correct_bool, prob_vec, entropy, true_prob_score, pred_prob_score
 
@@ -258,7 +269,7 @@ def model_test():
         param_stats = tf.contrib.tfprof.model_analyzer.print_model_analysis(
             tf.get_default_graph(),
             tfprof_options=tf.contrib.tfprof.model_analyzer.TRAINABLE_VARS_PARAMS_STAT_OPTIONS)
-        print('total_params: %d\n' % param_stats.total_parameters)
+        print('model total_params: %d\n' % param_stats.total_parameters)
         # We request our child threads to stop ...
         coord.request_stop()
         # ... and we wait for them to do so before releasing the main thread

@@ -94,21 +94,23 @@ DEFAULT_OPTIMIZER_STR = "Adam"
 DEFAULT_LEARNING_RATE = "0.0001"
 def add_train_params(parser):
     """define training parameters"""
+    parser.add_argument('--training', dest='training', default=False,
+                        action='store_true', help='Mark if training model')
     parser.add_argument('--train_max_steps', type=int, default=DEFAULT_MAX_STEPS,
                         help='Number of steps to run trainer')
     parser.add_argument('--train_save_ckpt_secs', type=int, default=DEFAULT_SECS_PER_SAVE,
                         help='Number of seconds to run trainer before saving ckpt')
+    parser.add_argument('--train_save_summ_secs', type=int, default=DEFAULT_SECS_PER_SAVE,
+                        help='Number of seconds to run trainer before saving summaries')
     parser.add_argument('--train_optimizer_str', type=str, default=DEFAULT_OPTIMIZER_STR,
                         help='Optimizer function')
-    parser.add_argument('--training', dest='training', default=False,
-                        action='store_true', help='Mark if training model')
     parser.add_argument('--train_learning_rate', type=float, default=DEFAULT_LEARNING_RATE,
                         help='Initial learning rate')
     return parser
 
 
 DEFAULT_EVAL_MODE = 'stats'
-DEFAULT_EVAL_INTERVAL = 120
+DEFAULT_EVAL_INTERVAL = 0
 def add_eval_params(parser):
     """define evaluation parameters"""
     parser.add_argument('--eval_run_mode', type=str, default=DEFAULT_EVAL_MODE,

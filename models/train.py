@@ -49,14 +49,14 @@ def train():
     global KL_SPARCE
     KL_SCALE = param_dict['reg_kl_scale']
     KL_SPARCE = param_dict['reg_kl_sparsity']
-    print("kl_params: " + str([KL_SCALE, KL_SPARCE]))
+    print("train kl_params: " + str([KL_SCALE, KL_SPARCE]))
     kl_loss = slim.regularizers.apply_regularization(kl_regularizer, weights_list=layers)
     total_loss = tf.losses.get_total_loss()
-    tf.summary.scalar('optimization/total_loss', total_loss)
-    tf.summary.scalar('optimization/classification_loss', classification_loss)
-    tf.summary.scalar('optimization/kl_loss', kl_loss)
-    tf.summary.scalar('optimization/l1_loss', l1_loss)
-    tf.summary.scalar('optimization/l2_loss', l2_loss)
+    tf.summary.scalar('batch_optimization/total_loss', total_loss)
+    tf.summary.scalar('batch_optimization/classification_loss', classification_loss)
+    tf.summary.scalar('batch_optimization/kl_loss', kl_loss)
+    tf.summary.scalar('batch_optimization/l1_loss', l1_loss)
+    tf.summary.scalar('batch_optimization/l2_loss', l2_loss)
 
     # create optimizer
     if param_dict['train_optimizer_str'] == "Adam":
@@ -76,12 +76,12 @@ def train():
     error = slim.learning.train(train_op,
                                 param_dict['chkpt_dir'],
                                 number_of_steps=param_dict['train_max_steps'],
-                                save_summaries_secs=param_dict['eval_interval_secs'],
+                                save_summaries_secs=param_dict['train_save_summ_secs'],
                                 save_interval_secs=param_dict['train_save_ckpt_secs'],
                                 session_config=tf.ConfigProto(gpu_options=tf.GPUOptions(allow_growth=True),
                                                               log_device_placement=False,
                                                               allow_soft_placement=True))
-    print(error)
+    print("train error: " + str(error))
 
 
 def kl_regularizer(layer):
