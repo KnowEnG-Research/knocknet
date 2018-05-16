@@ -5,7 +5,7 @@ import os
 import math
 import yaml
 import params
-from models import Model
+import models
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 
@@ -21,16 +21,22 @@ def train():
     param_dict = vars(parser.parse_args())
     if not os.path.exists(param_dict["chkpt_dir"]):
         os.makedirs(param_dict["chkpt_dir"])
-    param_yml = os.path.join(param_dict["chkpt_dir"], 'params.yml')
+    param_yml = os.path.join(param_dict["chkpt_dir"], 'train_params.yml')
     with open(param_yml, 'w') as outfile:
         yaml.dump(param_dict, outfile, default_flow_style=False)
 
     # load batch and make model predictions
-    model = Model(param_dict, is_training=True)
-    param_dict = model.param_dict
+    [param_dict, true_labels, logits, layers,
+     meta_batch] = models.construct_model(param_dict, is_training=True)
+
+    # create model summaries stats
+    [pred_labels, correct_bool, prob_vec, entropy, true_prob_score,
+     pred_prob_score] = models.model_summarize(true_labels, logits, param_dict['out_label_count'])
 
     # calculated losses
-    classification_loss = tf.losses.softmax_cross_entropy(model.true_labels_one_hot, model.logits)
+    true_labels_one_hot = tf.one_hot(true_labels, depth=param_dict['out_label_count'],
+                                     on_value=1, off_value=0)
+    classification_loss = tf.losses.softmax_cross_entropy(true_labels_one_hot, logits)
     weights = tf.trainable_variables()
     # l1
     l1_reg = slim.l1_regularizer(float(param_dict['reg_l1_scale']))
@@ -44,26 +50,13 @@ def train():
     KL_SCALE = param_dict['reg_kl_scale']
     KL_SPARCE = param_dict['reg_kl_sparsity']
     print("kl_params: " + str([KL_SCALE, KL_SPARCE]))
-    kl_loss = slim.regularizers.apply_regularization(kl_regularizer, weights_list=model.layers)
+    kl_loss = slim.regularizers.apply_regularization(kl_regularizer, weights_list=layers)
     total_loss = tf.losses.get_total_loss()
-
-    # create summaries stats
-    model.model_summarize()
-    # add summary scalars
-    metrics_to_values, metrics_to_updates = slim.metrics.aggregate_metric_map({
-        'eval/accuracy' : slim.metrics.streaming_accuracy(model.pred_labels, model.true_labels),
-        'eval/entropy' : slim.metrics.streaming_mean(model.entropy),
-        'eval/avg_true_prob_score' : slim.metrics.streaming_mean(model.true_prob_score),
-        'eval/avg_pred_prob_score' : slim.metrics.streaming_mean(model.pred_prob_score),
-        'optimization/softmax_ce_loss' : slim.metrics.streaming_mean(classification_loss),
-        'optimization/kl_loss' : slim.metrics.streaming_mean(kl_loss),
-        'optimization/l1_loss' : slim.metrics.streaming_mean(l1_loss),
-        'optimization/l2_loss' : slim.metrics.streaming_mean(l2_loss),
-        'optimization/total_loss' : slim.metrics.streaming_mean(total_loss),
-    })
-    # write the metrics as summaries
-    for metric_name, metric_value in metrics_to_values.items():
-        tf.summary.scalar(metric_name, metric_value)
+    tf.summary.scalar('optimization/total_loss', total_loss)
+    tf.summary.scalar('optimization/classification_loss', classification_loss)
+    tf.summary.scalar('optimization/kl_loss', kl_loss)
+    tf.summary.scalar('optimization/l1_loss', l1_loss)
+    tf.summary.scalar('optimization/l2_loss', l2_loss)
 
     # create optimizer
     if param_dict['train_optimizer_str'] == "Adam":
@@ -77,7 +70,7 @@ def train():
 
     # save training parameters
     with open(param_yml, 'w') as outfile:
-        yaml.dump(model.param_dict, outfile, default_flow_style=False)
+        yaml.dump(param_dict, outfile, default_flow_style=False)
 
     # run training
     error = slim.learning.train(train_op,

@@ -96,9 +96,10 @@ CMD="python3 models.py --data_dir /home/tfuser/data/test_tsv/ --out_label_count 
 # 20: check training
 rm -r "$LOGDIR/chkptdir_$TESTCT"
 CMD="python3 train.py --data_dir /home/tfuser/data/test_tsv/ --out_label_count 10 \
-    --chkpt_dir $LOGDIR/chkptdir_$TESTCT --eval_interval_secs 2 \
-    --batch_size 8 --data_mode all  --train_max_steps 1000 --training --reg_do_keep_prob 0.7 \
-    --conv_depth 3 --fcs_dimension_str 5,5 --data_batch_norm \
+    --chkpt_dir $LOGDIR/chkptdir_$TESTCT --eval_interval_secs 2 --train_save_ckpt_secs 8\
+    --batch_size 8 --data_mode all --out_actv_str None --train_max_steps 5000 \
+    --training --reg_do_keep_prob 0.7 --train_learning_rate 0.1  \
+    --fcs_dimension_str 0 --data_batch_norm \
     &> $LOGDIR/$TESTCT.log"
 # echo -e "\n****$TESTCT: $CMD"
 ((TRAIN_TESTS)) && assert_raises "$CMD" && ((TESTCT=TESTCT+1))

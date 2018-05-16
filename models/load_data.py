@@ -106,11 +106,8 @@ def get_batch(param_dict=params.default_param_dict(), shuffled=True):
         features = tf.slice(features, [input_size], [input_size])
     #features.set_shape([input_size])
     param_dict['input_size'] = input_size
-
-
     print("orig input_size: " + str(data_dict['class_column']-1))
     print("final input_size: " + str(input_size))
-
 
     # create batch
     if shuffled:
@@ -128,7 +125,7 @@ def get_batch(param_dict=params.default_param_dict(), shuffled=True):
                                                  capacity=batch_size,
                                                  allow_smaller_final_batch=True)
 
-    return feat_b, label_b, meta_b, input_size, data_dict['num_metadata']
+    return feat_b, label_b, meta_b, input_size, data_dict['num_metadata'], data_dict['num_examples']
 
 
 def load_data_test():

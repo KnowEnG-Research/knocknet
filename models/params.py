@@ -107,12 +107,12 @@ def add_train_params(parser):
     return parser
 
 
-DEFAULT_EVAL_MODE = 'summary'
+DEFAULT_EVAL_MODE = 'stats'
 DEFAULT_EVAL_INTERVAL = 120
 def add_eval_params(parser):
     """define evaluation parameters"""
     parser.add_argument('--eval_run_mode', type=str, default=DEFAULT_EVAL_MODE,
-                        help='Mode: "summary", "verbose"')
+                        help='Mode: "stats", "preds", "probs"')
     parser.add_argument('--eval_interval_secs', type=int, default=DEFAULT_EVAL_INTERVAL,
                         help='Time between sampling the evaluation metrics')
     return parser
@@ -145,14 +145,8 @@ def add_evaluater_args(parser):
     group1 = add_global_params(group1)
     group2 = parser.add_argument_group('data parameters')
     group2 = add_data_params(group2)
-    group5 = parser.add_argument_group('convolutional_layer parameters')
-    group5 = add_conv_params(group5)
-    group6 = parser.add_argument_group('fully_connected_layer parameters')
-    group6 = add_fcs_params(group6)
-    group7 = parser.add_argument_group('output_layer parameters')
-    group7 = add_outlayer_params(group7)
-    group8 = parser.add_argument_group('evaluation parameters')
-    group8 = add_eval_params(group8)
+    group3 = parser.add_argument_group('evaluation and summary parameters')
+    group3 = add_eval_params(group3)
     return parser
 
 def default_param_dict():
