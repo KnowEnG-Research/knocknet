@@ -447,7 +447,7 @@ PROBEFILE="$GEODIR/lincs_meta/GSE92742_Broad_LINCS_gene_info.l1000.txt"
 OUTDIR="/mnt/knowdnn_hdd/tfuser/data/expression_examples/"
 
 for COLL in top50 top51; do
-    for PAIRFILE in `ls $DATADIR/$COLL/train*txt`; do
+    for PAIRFILE in `ls $DATADIR/$COLL/*txt | grep -v train`; do
         KEY=`echo $PAIRFILE | sed "s#$DATADIR/$COLL/##g" | sed "s#.txt##g"`
         echo $KEY $FILE
         PAIROUTDIR="$OUTDIR/$COLL/$KEY"
@@ -470,7 +470,7 @@ CODEDIR='/home/tfuser/code/preprocess'
 OUTDIR="/home/tfuser/data/serialized_examples/"
 
 for COLL in top50 top51; do
-    for EXPRDIR in `ls -d $DATADIR/$COLL/*`; do
+    for EXPRDIR in `ls -d $DATADIR/$COLL/* | grep -v train`; do
         KEY=`echo $EXPRDIR | sed "s#$DATADIR/$COLL/##g"`
         echo $KEY
         SEROUTDIR="$OUTDIR/$COLL/$KEY"
