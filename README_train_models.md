@@ -2,13 +2,13 @@
 
 ```
 CODEDIR='/home/tfuser/code/models'
-DATASET_NAME="ASC.ctl.top50"
+DATASET_NAME="train80.ctl_cl10.top50"
 
 DATA_DIR="/home/tfuser/data/serialized_examples/top50/$DATASET_NAME/"
-DATA_BATCH_SIZE="4" #128
+DATA_BATCH_SIZE="128" # change for test
 DATA_MODE="all"
 DATA_SERIALIZED="--data_serialized"
-DATA_BATCH_NORM="" #--data_batch_norm"
+DATA_BATCH_NORM="--data_batch_norm" # change for test
 
 CONV_DEPTH="15"
 CONV_ACTV_STR="relu"
@@ -21,7 +21,7 @@ FCS_BATCH_NORM="--fcs_batch_norm"
 FCS_RES_BLOCK_SIZE="0"
 
 OUT_LABEL_COUNT="50"
-OUT_ACTV_STR="sigmoid"
+OUT_ACTV_STR="relu"
 
 REG_DO_KEEP_PROB="0.7"
 REG_L1_SCALE="0"
@@ -31,11 +31,11 @@ REG_KL_SPARSITY="0.2"
 
 TRAIN_DIR="/home/tfuser/models/$DATASET_NAME-dm_$DATA_MODE-cd_$CONV_DEPTH-dim_$FCS_DIMENSION_STR-do_$REG_DO_KEEP_PROB"
 TRAIN_CHKPT_DIR="$TRAIN_DIR/chkpts/"
-TRAIN_LEARNING_RATE="0.0001"
-TRAIN_MAX_STEPS="1" #100000
+TRAIN_LEARNING_RATE="0.001"
+TRAIN_MAX_STEPS="20000" # change for test
 TRAIN_OPTIMIZER_STR="Adam"
 TRAIN_SAVE_CKPT_SECS="600"
-TRAIN_SAVE_SUMM_SECS="15"
+TRAIN_SAVE_SUMM_SECS="20"
 
 TRAINCMD="python3 $CODEDIR/train.py \
     --data_dir $DATA_DIR \
@@ -69,15 +69,18 @@ TRAINCMD="python3 $CODEDIR/train.py \
 echo -e "\t$TRAINCMD"
 mkdir -p $TRAIN_DIR
 echo $TRAINCMD > $TRAIN_DIR/training.log
-eval $TRAINCMD
+eval time $TRAINCMD
+```
 
+## Run concurrent evaluation
+```
 DEV_DATASET_NAME="dev05.ctl_cl10.top50"
 DEV_DATA_DIR="/home/tfuser/data/serialized_examples/top50/$DATASET_NAME/"
 LOG_DIR="$TRAIN_CHKPT_DIR/concur_eval_$DEV_DATASET_NAME"
 EVAL_INTERVAL_SECS=30
 EVAL_RUN_MODE='stats'
 
-CONCURDEVCMD = "python3 $CODEDIR/eval.py \
+CONCURDEVCMD="python3 $CODEDIR/eval.py \
     --data_dir $DEV_DATA_DIR \
     --data_batch_size $DATA_BATCH_SIZE \
     --train_chkpt_dir $TRAIN_CHKPT_DIR \
@@ -91,5 +94,42 @@ echo $CONCURDEVCMD > $LOG_DIR/concur_eval.log
 eval $CONCURDEVCMD &
 CONCURDEV_PID=$!
 echo $CONCURDEV_PID
-
 ```
+
+## Run final evaluation
+```
+TRAIN_CHKPT_DIR="/home/tfuser/models/train80.ctl_cl10.top50-dm_all-cd_15-dim_978,978,978,978,978-do_0.7/chkpts/"
+
+#test15.top50.ctl_cl10:stats \
+#test15.top50.ctl_cl10-um:stats \
+
+for KEY in \
+dev05.ctl_cl10.top50:preds \
+train80.ctl_cl10.top50:stats \
+test15.ctl_cl10.top50:stats \
+test15.ctl_cl10.top50-um:stats \
+ASC.ctl.top50:preds \
+; do
+
+    DEV_DATASET_NAME=`echo $KEY | cut -f1 -d:`
+    EVAL_RUN_MODE=`echo $KEY | cut -f2 -d:`
+    
+    EVAL_DATA_DIR="/home/tfuser/data/serialized_examples/top50/$DATASET_NAME/"
+    LOG_DIR="$TRAIN_CHKPT_DIR/final_eval_$DEV_DATASET_NAME"
+    mkdir -p $LOG_DIR
+    
+    EVALCMD="python3 $CODEDIR/eval.py \
+        --data_dir $EVAL_DATA_DIR \
+        $DATA_SERIALIZED \
+        --data_batch_size $DATA_BATCH_SIZE \
+        --train_chkpt_dir $TRAIN_CHKPT_DIR \
+        --log_dir $LOG_DIR
+        --eval_run_mode $EVAL_RUN_MODE
+        &>> $LOG_DIR/final_eval.log"
+    
+    echo -e "\t$EVALCMD"
+    echo $EVALCMD > $LOG_DIR/final_eval.log
+    eval time $EVALCMD
+done
+```
+
