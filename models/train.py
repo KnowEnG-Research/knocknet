@@ -19,9 +19,9 @@ def train():
     parser = ArgumentParser()
     parser = params.add_trainer_args(parser)
     param_dict = vars(parser.parse_args())
-    if not os.path.exists(param_dict["chkpt_dir"]):
-        os.makedirs(param_dict["chkpt_dir"])
-    param_yml = os.path.join(param_dict["chkpt_dir"], 'train_params.yml')
+    if not os.path.exists(param_dict["train_chkpt_dir"]):
+        os.makedirs(param_dict["train_chkpt_dir"])
+    param_yml = os.path.join(param_dict["train_chkpt_dir"], 'train_params.yml')
     with open(param_yml, 'w') as outfile:
         yaml.dump(param_dict, outfile, default_flow_style=False)
 
@@ -74,7 +74,7 @@ def train():
 
     # run training
     error = slim.learning.train(train_op,
-                                param_dict['chkpt_dir'],
+                                param_dict['train_chkpt_dir'],
                                 number_of_steps=param_dict['train_max_steps'],
                                 save_summaries_secs=param_dict['train_save_summ_secs'],
                                 save_interval_secs=param_dict['train_save_ckpt_secs'],

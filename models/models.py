@@ -16,9 +16,9 @@ def construct_model(param_dict=params.default_param_dict, is_training=True, shuf
     # get input data
     (feat_batch, true_labels, meta_batch,
      input_size, num_metadata, num_examples) = load_data.get_batch(param_dict, shuffle)
-    param_dict["input_size"] = input_size
-    param_dict["num_metadata"] = num_metadata
-    param_dict["num_examples"] = num_examples
+    param_dict["data_input_size"] = input_size
+    param_dict["data_num_metadata"] = num_metadata
+    param_dict["data_num_examples"] = num_examples
     tf.summary.histogram('batch_data/true_labels', true_labels) #B
     tf.summary.histogram('batch_data/orig_feat_vals', feat_batch) #BxI
 
@@ -54,21 +54,27 @@ def construct_model(param_dict=params.default_param_dict, is_training=True, shuf
 
 
 def build_conv_layer(is_training, in_feats_mod, param_dict):
-    """ needs batch_size, conv_depth, conv_actv_str, conv_gene_pair, conv_batch_norm,
-     and input_size, reg_do_keep_prob, is_training"""
+    """ needs data_batch_size, conv_depth, conv_actv_str, conv_gene_pair, conv_batch_norm,
+     and data_input_size, reg_do_keep_prob, is_training"""
     if param_dict['conv_depth'] > 0:
         #Assuming inputs are still in [batch_size, 2*gene_count]. Will first
         #change it to be [batch_size, gene_count, 2], which slim expects
+#        in_feats_mod = tf.Print(in_feats_mod, [in_feats_mod], message="in_feats_mod: ", 
+#                                summarize=param_dict['data_batch_size']*param_dict['data_input_size'])
         conv_inputs = tf.reshape(in_feats_mod,
-                                 [param_dict['batch_size'], 2,
+                                 [param_dict['data_batch_size'], 2,
                                   int(int(in_feats_mod.shape[1])/2)])
+#        conv_inputs = tf.Print(conv_inputs, [conv_inputs], message="conv_inputs1: ", 
+#                               summarize=param_dict['data_batch_size']*param_dict['data_input_size'])
         conv_inputs = tf.transpose(conv_inputs, [0, 2, 1])
+#        conv_inputs = tf.Print(conv_inputs, [conv_inputs], message="conv_inputs2: ", 
+#                               summarize=param_dict['data_batch_size']*param_dict['data_input_size'])
         print("model conv reshape: " + str(conv_inputs))
         conv_actv_fn = get_act_fn(param_dict['conv_actv_str'])
         if param_dict['conv_gene_pair']:
             conv_outputs = gene_pair_convolution(conv_inputs,
-                                                 param_dict['batch_size'],
-                                                 [int(param_dict['input_size']/2), 2,
+                                                 param_dict['data_batch_size'],
+                                                 [int(param_dict['data_input_size']/2), 2,
                                                   param_dict['conv_depth']],
                                                  conv_actv_fn)
         else:

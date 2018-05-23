@@ -5,24 +5,23 @@ import yaml
 
 DEFAULT_CHKPT_DIR = 'chkpts'
 DEFAULT_LOG_DIR = 'logs'
-DEFAULT_BATCH_SIZE = 128
 def add_global_params(parser):
     """define global parameters"""
-    parser.add_argument('--chkpt_dir', default=DEFAULT_CHKPT_DIR, type=str,
+    parser.add_argument('--train_chkpt_dir', default=DEFAULT_CHKPT_DIR, type=str,
                         help='Directory for saved model')
     parser.add_argument('--log_dir', default=DEFAULT_LOG_DIR, type=str,
                         help='Directory for summary and logs')
-    parser.add_argument('--batch_size', type=int, default=DEFAULT_BATCH_SIZE,
-                        help='Number of examples in a minibatch')
     return parser
 
-
+DEFAULT_BATCH_SIZE = 128
 DEFAULT_DATA_MODE = 'all'
 DEFAULT_DATA_DIR = './'
 def add_data_params(parser):
     """define data parameters"""
     parser.add_argument('--data_dir', default=DEFAULT_DATA_DIR, type=str,
                         help='Directory storing input data')
+    parser.add_argument('--data_batch_size', type=int, default=DEFAULT_BATCH_SIZE,
+                        help='Number of examples in a minibatch')
     parser.add_argument('--data_serialized', dest='data_serialized', default=False,
                         action='store_true', help='Default .data files or serialized .tfrecords')
     parser.add_argument('--data_mode', type=str, default=DEFAULT_DATA_MODE,

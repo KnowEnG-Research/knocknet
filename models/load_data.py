@@ -8,9 +8,9 @@ import tensorflow.contrib.slim as slim
 
 
 def get_batch(param_dict=params.default_param_dict(), shuffled=True):
-    """ uses batch_size, data_dir, data_mode, data_serialized """
+    """ uses data_batch_size, data_dir, data_mode, data_serialized """
 
-    batch_size = param_dict["batch_size"]
+    batch_size = param_dict["data_batch_size"]
     all_files = sorted(os.listdir(param_dict["data_dir"]))
     nthreads = 1
 
@@ -88,7 +88,6 @@ def get_batch(param_dict=params.default_param_dict(), shuffled=True):
         #print("data size of reshaped_reader: " + str(reshaped_reader))
         features = reshaped_reader[0:data_dict['class_column']-1]
         label = reshaped_reader[data_dict['class_column']-1:data_dict['class_column']]
-        label = tf.squeeze(label)
         metadata = reshaped_reader[data_dict['class_column']:(data_dict['class_column']
                                                               +data_dict['num_metadata'])]
     #print("data size of features: " + str(features))
@@ -96,6 +95,7 @@ def get_batch(param_dict=params.default_param_dict(), shuffled=True):
     #print("data size of metadata: " + str(metadata))
 
     # reformat example features
+    label = tf.squeeze(label)
     input_size = data_dict['class_column']-1
     if param_dict['data_mode'] == 'diff':
         input_size = int((input_size)/2)
@@ -105,7 +105,7 @@ def get_batch(param_dict=params.default_param_dict(), shuffled=True):
         input_size = int((input_size)/2)
         features = tf.slice(features, [input_size], [input_size])
     #features.set_shape([input_size])
-    param_dict['input_size'] = input_size
+    param_dict['data_input_size'] = input_size
     print("data orig input_size: " + str(data_dict['class_column']-1))
     print("data final input_size: " + str(input_size))
 
@@ -133,7 +133,7 @@ def load_data_test():
     parser = ArgumentParser()
     parser = params.add_trainer_args(parser)
     param_dict = vars(parser.parse_args())
-    feat_b, label_b, meta_b, input_size, nummeta = get_batch(param_dict, param_dict["training"])
+    feat_b, label_b, meta_b, input_size, nummeta, numexamps = get_batch(param_dict, param_dict["training"])
     print("data final input_size: " + str(input_size))
     print("data nummeta: " + str(nummeta))
     with tf.Session() as sess:
