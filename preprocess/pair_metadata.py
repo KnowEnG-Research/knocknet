@@ -47,7 +47,7 @@ def select_class_instances(class_meta_df, class_label_df,
             bools = class_meta_df[class_key].isin([label_name])
             inst_ids = list(class_meta_df.index[bools])
         if len(inst_ids) == 0:
-            continue;
+            continue
         selected_insts = []
         if num_per_class is not None:
             selected_insts = balanced_sampler(inst_ids, int(num_per_class), True)
@@ -211,12 +211,14 @@ def main():
                                             selected_match_meta,
                                             selected_class_meta,
                                             args_dict['match_key'])
+        paired_metadata_df = paired_metadata_df.reset_index(drop=True)
     # shuffle the paired_metadata df
     print('\n' + 'printing output_file: ' + args_dict['output_file'])
     if args_dict['original_order']:
         paired_metadata_df.to_csv(args_dict['output_file'], sep='\t', header=True, index=True)
     else: #default
         shuffled_df = paired_metadata_df.sample(frac=1)
+        shuffled_df = shuffled_df.reset_index(drop=True)
         shuffled_df.to_csv(args_dict['output_file'], sep='\t', header=True, index=True)
 
 

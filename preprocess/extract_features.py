@@ -1,4 +1,4 @@
-""" module to pairing metadata contents"""
+""" module to extract features for paired metadata"""
 from argparse import ArgumentParser
 import os
 import yaml
@@ -23,7 +23,7 @@ def main_parse_args():
 
 
 def main():
-    """Parse args and reads and write files for metadata pairing"""
+    """Parse args and reads and write expression files for paired metadata"""
     args_dict = main_parse_args()
 
     # get list of probes
@@ -33,6 +33,7 @@ def main():
     # read in paired metadata
     paired_metadata_df = pd.read_table(args_dict['paired_metadata_infile'], sep='\t',
                                        header=0, index_col=0)
+    paired_metadata_df = paired_metadata_df.reset_index(drop=True)
     chunksize = int(paired_metadata_df.shape[0] / args_dict['maxchunks'])
 
     # get info about gctx file
@@ -81,6 +82,9 @@ def main():
         # fetch data from gctx
         print("Fetching chunk " + str(chunk) + "...")
         allexps_gct = parse.parse(args_dict['gctx_infile'], rid=probeset, cid=validexp_ids)
+        #returns rows and columns in different order
+        print("Gene Ids Order: " + str(list(allexps_gct.data_df.index)))
+        #restore order of exps
         s1_df = allexps_gct.data_df[keep_s1ids]
         s2_df = allexps_gct.data_df[keep_s2ids]
         s1_df.columns = keepidxs

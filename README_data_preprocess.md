@@ -407,7 +407,7 @@ for FILE1 in `ls $DATADIR/$REALKEY/*txt`; do
     echo $FILE1
     FILE2=`echo $FILE1 | sed "s#$REALKEY#$NONEKEY#g"`
     OUTFILE=`echo $FILE1 | sed "s#$REALKEY#$OUTKEY#g"`
-    LOGFILE=`echo OUTFILE | sed "s#.txt#.log#g"`
+    LOGFILE=`echo $OUTFILE | sed "s#.txt#.log#g"`
     echo $FILE2
     echo $OUTFILE
     ls -l $FILE2
@@ -417,12 +417,23 @@ for FILE1 in `ls $DATADIR/$REALKEY/*txt`; do
     echo $CMD > $LOGFILE
     eval $CMD
 done
-# rename /mnt/knowdnn_hdd/tfuser/data/paired_metadata/b4k to /mnt/knowdnn_hdd/tfuser/data/paired_metadata/b4k-51
+# mv /mnt/knowdnn_hdd/tfuser/data/paired_metadata/b4k /mnt/knowdnn_hdd/tfuser/data/paired_metadata/b4k-51
 ```
 
 ## Matched Pairs for top400
+```
+TODO
+```
+
 ## Matched Pairs for 401st
+```
+TODO
+```
+
 ## Merge Matched Pairs for top 401
+```
+TODO
+```
 
 # Extract GEO Expression Values
 ## Extract for Top 50 and Top 51
@@ -430,8 +441,9 @@ done
 # need python2, cmappy, yaml - source activate python2 && pip install cmapPy
 DATADIR='/mnt/knowdnn_hdd/tfuser/data/paired_metadata/'
 CODEDIR='/home/tfuser/code/preprocess'
-GCTXFILE="/mnt/knowdnn_hdd/tfuser/data/from_GEO/GSE92742_Broad_LINCS_Level3_INF_mlr12k_n1319138x12328.gctx"
-PROBEFILE="/mnt/knowdnn_hdd/tfuser/data/from_GEO/lincs_meta/GSE92742_Broad_LINCS_gene_info.l1000.txt"
+GEODIR="/mnt/knowdnn_hdd/tfuser/data/from_GEO/"
+GCTXFILE="/home/tfuser/data/GSE92742_Broad_LINCS_Level3_INF_mlr12k_n1319138x12328.gctx"
+PROBEFILE="$GEODIR/lincs_meta/GSE92742_Broad_LINCS_gene_info.l1000.txt"
 OUTDIR="/mnt/knowdnn_hdd/tfuser/data/expression_examples/"
 
 for COLL in top50 top51; do
@@ -445,7 +457,7 @@ for COLL in top50 top51; do
             -mc 1 >> $LOGFILE"
         echo $CMD
         echo $CMD > $LOGFILE
-        #eval $CMD
+        eval $CMD
     done;
 done
 ```
@@ -459,17 +471,21 @@ OUTDIR="/home/tfuser/data/serialized_examples/"
 
 for COLL in top50 top51; do
     for EXPRDIR in `ls -d $DATADIR/$COLL/*`; do
-        KEY=`echo EXPRDIR | sed "s#$DATADIR/$COLL/##g"`
+        KEY=`echo $EXPRDIR | sed "s#$DATADIR/$COLL/##g"`
         echo $KEY
         SEROUTDIR="$OUTDIR/$COLL/$KEY"
         mkdir -p $SEROUTDIR
         LOGFILE="$SEROUTDIR/$KEY.log"
-        CMD="python $CODEDIR/extract_features.py $PAIRFILE $GCTXFILE $PROBEFILE $PAIROUTDIR \
-            -mc 1 >> $LOGFILE"
-        CMD="python3 $CODEDIR/serialize_features.py $EXPRDIR $SEROUTDIR --label_col 7 >> $LOGFILE"
+        CMD="python3 $CODEDIR/serialize_features.py $EXPRDIR $SEROUTDIR \
+            --label_col 1957 >> $LOGFILE"
         echo $CMD
         echo $CMD > $LOGFILE
         eval $CMD
     done;
 done
+```
 
+## Serialize for Top 400 and Top 401
+```
+TODO
+```

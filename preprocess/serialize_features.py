@@ -54,7 +54,7 @@ def main():
 
         # create corresponding outfile
         dataset_name = data_files[i].replace(args_dict['insuff'], "")
-        outfile = args_dict['outdir'] + dataset_name + args_dict['outsuff']
+        outfile = os.path.join(args_dict['outdir'], dataset_name + args_dict['outsuff'])
         print(outfile)
         writer = tf.python_io.TFRecordWriter(outfile)
 

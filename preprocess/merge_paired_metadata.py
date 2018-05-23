@@ -1,4 +1,4 @@
-""" module to pairing metadata contents"""
+""" module to merging paired metadata contents"""
 from argparse import ArgumentParser
 import pandas as pd
 
@@ -22,7 +22,7 @@ def main_parse_args():
 
 
 def main():
-    """Parse args and reads and write files for metadata pairing"""
+    """Parse args and reads and write files for metadata pair merging"""
     args_dict = main_parse_args()
     # read in infiles
     state1meta_df = pd.read_table(args_dict['paired_metadata1_infile'], sep='\t',
@@ -46,6 +46,7 @@ def main():
         merge_df.to_csv(args_dict['output_file'], sep='\t', header=True, index=True)
     else: #default
         shuffled_df = merge_df.sample(frac=1)
+        shuffled_df = shuffled_df.reset_index(drop=True)
         shuffled_df.to_csv(args_dict['output_file'], sep='\t', header=True, index=True)
 
 
