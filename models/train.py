@@ -72,6 +72,12 @@ def train():
     with open(param_yml, 'w') as outfile:
         yaml.dump(param_dict, outfile, default_flow_style=False)
 
+    # print model parameter stats
+#    param_stats = tf.contrib.tfprof.model_analyzer.print_model_analysis(
+#        tf.get_default_graph(),
+#        tfprof_options=tf.contrib.tfprof.model_analyzer.TRAINABLE_VARS_PARAMS_STAT_OPTIONS)
+#    print('model total_params: %d\n' % param_stats.total_parameters)
+
     # run training
     error = slim.learning.train(train_op,
                                 param_dict['train_chkpt_dir'],

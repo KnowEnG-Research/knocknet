@@ -8,9 +8,6 @@ import models
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 
-KL_SCALE = -1.0
-KL_SPARCE = -1.0
-
 def evaluate():
     """run evaluation"""
 
