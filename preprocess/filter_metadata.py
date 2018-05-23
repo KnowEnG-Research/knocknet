@@ -15,6 +15,7 @@ def main_parse_args():
                         help='file with the pert_iname to keep in first column')
     args = parser.parse_args()
     args_dict = vars(args)
+    print("args_dict: " + str(args_dict) +'\n')
     return args_dict
 
 

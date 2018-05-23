@@ -28,6 +28,7 @@ def main_parse_args():
                         help='print out paired_meta in the original selected order')
     args = parser.parse_args()
     args_dict = vars(args)
+    print("args_dict: " + str(args_dict) +'\n')
     return args_dict
 
 
@@ -41,10 +42,12 @@ def select_class_instances(class_meta_df, class_label_df,
     all_selected_class_insts = []
     for label_name in list(class_label_df.index):
         # label_name = class_label_df.index[0]
-        inst_ids = class_meta_df.index
+        inst_ids = list(class_meta_df.index)
         if label_name != 'NoLabel':
             bools = class_meta_df[class_key].isin([label_name])
             inst_ids = list(class_meta_df.index[bools])
+        if len(inst_ids) == 0:
+            continue;
         selected_insts = []
         if num_per_class is not None:
             selected_insts = balanced_sampler(inst_ids, int(num_per_class), True)
@@ -63,6 +66,7 @@ def select_class_instances(class_meta_df, class_label_df,
 def select_matched_instances(match_meta_df, selected_class_meta, match_key, unmatch):
     """returns metadata for (un)matched instances in repeated shuffled order"""
     print('\n' + 'match_meta_df: ' + str(match_meta_df.shape))
+    print('match_val, uniq_vals, vals_sampled')
     all_selected_match_insts_series = selected_class_meta[match_key].copy()
     # for each match_key value
     for match_val in sorted(list(selected_class_meta[match_key].unique())):
@@ -103,8 +107,8 @@ def merge_metadata(selected_class_labels, selected_state1_meta,
                           selected_state1_meta,
                           selected_state2_meta], 1)
     print('')
-    print('label', 'total_inst', 'uniq_inst', 'uniq_s1_ids', 'uniq_s1_cls',
-          'uniq_s2_ids', 'uniq_s2_cls')
+    print('label', 'total_inst', 'uniq_inst', 'uniq_s1_ids', 'uniq_s1_clines',
+          'uniq_s2_ids', 'uniq_s2_clines')
     # summarize per class
     for label in list(merge_df['label_id'].unique()):
         # label = list(merge_df['label_id'].unique())[0]

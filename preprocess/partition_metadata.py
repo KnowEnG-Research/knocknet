@@ -18,6 +18,7 @@ def main_parse_args():
                         help='suffix for output partition files')
     args = parser.parse_args()
     args_dict = vars(args)
+    print("args_dict: " + str(args_dict) +'\n')
     return args_dict
 
 
