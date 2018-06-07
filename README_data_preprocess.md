@@ -23,16 +23,30 @@ gunzip $DATADIR/lincs_meta/GSE92742_Broad_LINCS_inst_info.txt.gz
 ```
 wget -P $DATADIR/lincs_meta $URLBASE/GSE92742_Broad_LINCS_gene_info.txt.gz
 gunzip $DATADIR/lincs_meta/GSE92742_Broad_LINCS_gene_info.txt.gz
+
 ```
 
 7. Extract only the L1000 probes into GSE92742_Broad_LINCS_gene_info.l1000.txt
+```
+cut -f2 GSE92742_Broad_LINCS_gene_info.l1000.txt > GSE92742_Broad_LINCS_gene_info.l1000.genes.txt
+docker run --rm -w /mnt/knowdnn_hdd/tfuser/data/from_GEO/lincs_meta -v /mnt/knowdnn_hdd/tfuser/data/from_GEO/lincs_meta:/mnt/knowdnn_hdd/tfuser/data/from_GEO/lincs_meta knoweng/kn_mapper /home/src/kn_mapper.py GSE92742_Broad_LINCS_gene_info.l1000.genes.txt -t 9606
+```
+
 8. Download the other lincs metadata
 
+9. Download the mcf10a experiment data
+```
+DATADIR='/mnt/knowdnn_hdd/tfuser/data/mcf10a_progression/'
+mkdir -p $DATADIR
+wget -P $DATADIR https://media.nature.com/original/nature-assets/ncomms/2015/150309/ncomms7367/extref/ncomms7367-s4.xlsx
+# save table as file original_log2RPKM_table.txt
+cut -f1 original_log2RPKM_table.txt > original_log2RPKM_table.genes.txt
+docker run --rm -w $DATADIR -v $DATADIR:$DATADIR knoweng/kn_mapper /home/src/kn_mapper.py  original_log2RPKM_table.genes.txt -t 9606
+```
 
 # Create Filtered Metadata
 ## Setup Knockdown Filtered
 1. Summarize all LINCS metadata:
-
 ```
 INDIR='/mnt/knowdnn_hdd/tfuser/data/from_GEO/lincs_meta'
 OUTDIR='/mnt/knowdnn_hdd/tfuser/data/filtered_metadata/all_exps'
@@ -131,7 +145,7 @@ python3 $CODEDIR/summarize_metadata.py $OUTMETA \
 
   - 311631 trt_sh exps, at least 8353 per 10 cell_ids, at least 5 per 3959 pert_inames
 
-3. Select bottom 400 knockdown classes and keep ASC (11th largest) cell_id:
+3. Select bottom 4000 knockdown classes and keep ASC (11th largest) cell_id:
 
 ```
 DATADIR='/mnt/knowdnn_hdd/tfuser/data/filtered_metadata/trt_sh'
@@ -318,12 +332,13 @@ CODEDIR='/home/tfuser/code/preprocess'
 
 for MATCHSTR in \
 top50:ctl/ctl_cl10:trt_sh/top50/top50:2::dev05:100 \
+top50:ctl/ctl_cl10:trt_sh/top50/top50:2::train80:1000 \
+top50:ctl/ctl:trt_sh/top50/top50:2::ASC:10 \
 top50:ctl/ctl_cl10:trt_sh/top50/top50:2::test15:300 \
 top50:ctl/ctl_cl10:trt_sh/top50/top50:2:-um:test15:300 \
 top50:trt_sh/top50/top50:ctl/ctl_cl10:1::test15:300 \
-top50:trt_sh/top50/top50:ctl/ctl_cl10:1:-um:test15:300 \
-top50:ctl/ctl_cl10:trt_sh/top50/top50:2::train80:1000 \
-top50:ctl/ctl:trt_sh/top50/top50:2::ASC:10 \
+top50:trt_sh/top50/top50:trt_sh/top50/top50:2::test15:300 \
+top50:trt_sh/top50/top50:trt_sh/top50/top50:2:-um:test15:300 \
 ; do
 
     COLL=`echo $MATCHSTR | cut -f1 -d:`
@@ -359,12 +374,13 @@ CODEDIR='/home/tfuser/code/preprocess'
 
 for MATCHSTR in \
 b4k:ctl/ctl_cl10:trt_sh/b4k/b4k:2::dev05:1 \
+b4k:ctl/ctl_cl10:trt_sh/b4k/b4k:2::train80:5 \
+b4k:ctl/ctl:trt_sh/b4k/b4k:2::ASC:1 \
 b4k:ctl/ctl_cl10:trt_sh/b4k/b4k:2::test15:3 \
 b4k:ctl/ctl_cl10:trt_sh/b4k/b4k:2:-um:test15:3 \
 b4k:trt_sh/b4k/b4k:ctl/ctl_cl10:1::test15:3 \
-b4k:trt_sh/b4k/b4k:ctl/ctl_cl10:1:-um:test15:3 \
-b4k:ctl/ctl_cl10:trt_sh/b4k/b4k:2::train80:5 \
-b4k:ctl/ctl:trt_sh/b4k/b4k:2::ASC:1 \
+b4k:trt_sh/b4k/b4k:trt_sh/b4k/b4k:2::test15:3 \
+b4k:trt_sh/b4k/b4k:trt_sh/b4k/b4k:2:-um:test15:3 \
 ; do
 
     COLL=`echo $MATCHSTR | cut -f1 -d:`
@@ -422,55 +438,193 @@ done
 
 ## Matched Pairs for top400
 ```
-TODO
+DATADIR='/mnt/knowdnn_hdd/tfuser/data/filtered_metadata/'
+OUTDIR='/mnt/knowdnn_hdd/tfuser/data/paired_metadata/'
+CODEDIR='/home/tfuser/code/preprocess'
+
+COLL="top400"
+for MATCHSTR in \
+ctl/ctl_cl10:trt_sh/$COLL/$COLL:2::dev05:100 \
+ctl/ctl_cl10:trt_sh/$COLL/$COLL:2::train80:10000 \
+ctl/ctl:trt_sh/$COLL/$COLL:2::ASC:20 \
+ctl/ctl_cl10:trt_sh/$COLL/$COLL:2::test15:1000 \
+ctl/ctl_cl10:trt_sh/$COLL/$COLL:2:-um:test15:1000 \
+trt_sh/$COLL/$COLL:ctl/ctl_cl10:1::test15:1000 \
+trt_sh/$COLL/$COLL:trt_sh/$COLL/$COLL:2::test15:1000 \
+trt_sh/$COLL/$COLL:trt_sh/$COLL/$COLL:2:-um:test15:1000 \
+; do
+
+    F1STR=`echo $MATCHSTR | cut -f1 -d:`
+    F2STR=`echo $MATCHSTR | cut -f2 -d:`
+    CLASS_STATE=`echo $MATCHSTR | cut -f3 -d:`
+    MATCH=`echo $MATCHSTR | cut -f4 -d:`
+    PARTITION=`echo $MATCHSTR | cut -f5 -d:`
+    NPC=`echo $MATCHSTR | cut -f6 -d:`
+
+    S1FILE=$DATADIR/$F1STR.$PARTITION.metadata.txt
+    S2FILE=$DATADIR/$F2STR.$PARTITION.metadata.txt
+    CLASS_LABEL_FILE=$DATADIR/trt_sh/trt_sh.pert_inames.$COLL.txt
+    KEY1=`echo $F1STR | sed 's#ctl/##g' | sed 's#trt_sh/##g' | sed "s#$COLL/##g"`
+    KEY2=`echo $F2STR | sed 's#ctl/##g' | sed 's#trt_sh/##g' | sed "s#$COLL/##g"`
+    mkdir -p $OUTDIR/$COLL/
+    OUTFILE=$OUTDIR/$COLL/$PARTITION.$KEY1.$KEY2$MATCH.txt
+    LOGFILE=$OUTDIR/$COLL/$PARTITION.$KEY1.$KEY2$MATCH.log
+
+    CMD="python3 $CODEDIR/pair_metadata.py $S1FILE $S2FILE $OUTFILE \
+        -clf $CLASS_LABEL_FILE -cs $CLASS_STATE $MATCH -npc $NPC >> $LOGFILE"
+    echo $CMD
+    echo $CMD > $LOGFILE
+    eval $CMD
+done
 ```
 
 ## Matched Pairs for 401st
 ```
-TODO
+DATADIR='/mnt/knowdnn_hdd/tfuser/data/filtered_metadata/'
+OUTDIR='/mnt/knowdnn_hdd/tfuser/data/paired_metadata/'
+CODEDIR='/home/tfuser/code/preprocess'
+
+COLL="b4k"
+for MATCHSTR in \
+ctl/ctl_cl10:trt_sh/$COLL/$COLL:2::dev05:5 \
+ctl/ctl_cl10:trt_sh/$COLL/$COLL:2::train80:500 \
+ctl/ctl:trt_sh/$COLL/$COLL:2::ASC:1 \
+ctl/ctl_cl10:trt_sh/$COLL/$COLL:2::test15:50 \
+ctl/ctl_cl10:trt_sh/$COLL/$COLL:2:-um:test15:50 \
+trt_sh/$COLL/$COLL:ctl/ctl_cl10:1::test15:50 \
+trt_sh/$COLL/$COLL:trt_sh/$COLL/$COLL:2::test15:50 \
+trt_sh/$COLL/$COLL:trt_sh/$COLL/$COLL:2:-um:test15:50 \
+; do
+
+    F1STR=`echo $MATCHSTR | cut -f1 -d:`
+    F2STR=`echo $MATCHSTR | cut -f2 -d:`
+    CLASS_STATE=`echo $MATCHSTR | cut -f3 -d:`
+    MATCH=`echo $MATCHSTR | cut -f4 -d:`
+    PARTITION=`echo $MATCHSTR | cut -f5 -d:`
+    NPC=`echo $MATCHSTR | cut -f6 -d:`
+
+    S1FILE=$DATADIR/$F1STR.$PARTITION.metadata.txt
+    S2FILE=$DATADIR/$F2STR.$PARTITION.metadata.txt
+    CLASS_LABEL_FILE=$DATADIR/trt_sh/trt_sh.pert_inames.$COLL.txt
+    KEY1=`echo $F1STR | sed 's#ctl/##g' | sed 's#trt_sh/##g' | sed "s#$COLL/##g"`
+    KEY2=`echo $F2STR | sed 's#ctl/##g' | sed 's#trt_sh/##g' | sed "s#$COLL/##g"`
+    mkdir -p $OUTDIR/$COLL/
+    OUTFILE=$OUTDIR/$COLL/$PARTITION.$KEY1.$KEY2$MATCH.txt
+    LOGFILE=$OUTDIR/$COLL/$PARTITION.$KEY1.$KEY2$MATCH.log
+
+    CMD="python3 $CODEDIR/pair_metadata.py $S1FILE $S2FILE $OUTFILE \
+        -clf $CLASS_LABEL_FILE -cs $CLASS_STATE $MATCH -npc $NPC >> $LOGFILE"
+    echo $CMD
+    echo $CMD > $LOGFILE
+    eval $CMD
+done
 ```
 
 ## Merge Matched Pairs for top 401
 ```
-TODO
+DATADIR='/mnt/knowdnn_hdd/tfuser/data/paired_metadata/'
+CODEDIR='/home/tfuser/code/preprocess'
+
+REALKEY='top400'
+NONEKEY='b4k'
+OUTKEY='top401'
+OUTDIR="/mnt/knowdnn_hdd/tfuser/data/paired_metadata/$OUTKEY"
+mkdir -p $OUTDIR
+
+for FILE1 in `ls $DATADIR/$REALKEY/*txt`; do
+    echo $FILE1
+    FILE2=`echo $FILE1 | sed "s#$REALKEY#$NONEKEY#g"`
+    OUTFILE=`echo $FILE1 | sed "s#$REALKEY#$OUTKEY#g"`
+    LOGFILE=`echo $OUTFILE | sed "s#.txt#.log#g"`
+    echo $FILE2
+    echo $OUTFILE
+    ls -l $FILE2
+    CMD="python3 $CODEDIR/merge_paired_metadata.py $FILE1 $FILE2 $OUTFILE \
+        -sl2 400 >> $LOGFILE"
+    echo $CMD
+    echo $CMD > $LOGFILE
+    eval $CMD
+done
+# mv /mnt/knowdnn_hdd/tfuser/data/paired_metadata/b4k /mnt/knowdnn_hdd/tfuser/data/paired_metadata/b4k-401
 ```
 
 # Extract GEO Expression Values
-## Extract for Top 50 and Top 51
+## Extract data for Top 50, Top 51
 ```
 # need python2, cmappy, yaml - source activate python2 && pip install cmapPy
 DATADIR='/mnt/knowdnn_hdd/tfuser/data/paired_metadata/'
 CODEDIR='/home/tfuser/code/preprocess'
 GEODIR="/mnt/knowdnn_hdd/tfuser/data/from_GEO/"
-GCTXFILE="/home/tfuser/data/GSE92742_Broad_LINCS_Level3_INF_mlr12k_n1319138x12328.gctx"
+GCTXFILE="/home/tfuser/data/GSE92742_Broad_LINCS_Level3_INF_mlr12k_n1319138x12328.top401.gctx"
 PROBEFILE="$GEODIR/lincs_meta/GSE92742_Broad_LINCS_gene_info.l1000.txt"
 OUTDIR="/mnt/knowdnn_hdd/tfuser/data/expression_examples/"
 
 for COLL in top50 top51; do
-    for PAIRFILE in `ls $DATADIR/$COLL/*txt | grep -v train`; do
+    for PAIRFILE in `ls $DATADIR/$COLL/*txt`; do
         KEY=`echo $PAIRFILE | sed "s#$DATADIR/$COLL/##g" | sed "s#.txt##g"`
         echo $KEY $FILE
         PAIROUTDIR="$OUTDIR/$COLL/$KEY"
         mkdir -p $PAIROUTDIR
         LOGFILE="$PAIROUTDIR/$KEY.log"
         CMD="python $CODEDIR/extract_features.py $PAIRFILE $GCTXFILE $PROBEFILE $PAIROUTDIR \
-            -mc 1 >> $LOGFILE"
+            -mc 1 >> $LOGFILE 2> $LOGFILE.warn"
         echo $CMD
         echo $CMD > $LOGFILE
-        eval $CMD
+        eval time $CMD
     done;
 done
 ```
 
+## Extract for Top400, Top401
+```
+# need python2, cmappy, yaml - source activate python2 && pip install cmapPy
+DATADIR='/mnt/knowdnn_hdd/tfuser/data/paired_metadata/'
+CODEDIR='/home/tfuser/code/preprocess'
+GEODIR="/mnt/knowdnn_hdd/tfuser/data/from_GEO/"
+GCTXFILE="/home/tfuser/data/GSE92742_Broad_LINCS_Level3_INF_mlr12k_n1319138x12328.top401.gctx"
+PROBEFILE="$GEODIR/lincs_meta/GSE92742_Broad_LINCS_gene_info.l1000.txt"
+OUTDIR="/mnt/knowdnn_hdd/tfuser/data/expression_examples/"
+
+for COLL in top401; do
+    for TYPEMAX in ASC:1 dev:1 test:10 train:40 ; do
+        TYPE=`echo $TYPEMAX | cut -f1 -d:`
+        MAX=`echo $TYPEMAX | cut -f2 -d:`
+        for PAIRFILE in `ls $DATADIR/$COLL/$TYPE*txt`; do
+            KEY=`echo $PAIRFILE | sed "s#$DATADIR/$COLL/##g" | sed "s#.txt##g"`
+            echo $KEY $FILE
+            PAIROUTDIR="$OUTDIR/$COLL/$KEY"
+            mkdir -p $PAIROUTDIR
+            LOGFILE="$PAIROUTDIR/$KEY.log"
+            CMD="python $CODEDIR/extract_features.py $PAIRFILE $GCTXFILE $PROBEFILE $PAIROUTDIR \
+                -mc $MAX >> $LOGFILE 2> $LOGFILE.warn"
+            echo $CMD
+            echo $CMD > $LOGFILE
+            eval time $CMD
+        done;
+    done;
+done
+```
+
+## Create MCF10A dataset
+```
+# copy from final tab of mch10a-original-data.xlsx into /mnt/knowdnn_hdd/tfuser/data/expression_examples/mcf10a_progression/file0.data
+# save info.yml
+echo "class_column: 1957
+num_examples: 144
+num_features: 1956
+num_files: 1
+num_metadata: 4" > /mnt/knowdnn_hdd/tfuser/data/expression_examples/mcf10a_progression/info.yml
+```
+
 # Serialize Features Files
-## Serialize for Top 50 and Top 51
+## Serialize for Top 50 51 400 401
 ```
 DATADIR='/mnt/knowdnn_hdd/tfuser/data/expression_examples/'
 CODEDIR='/home/tfuser/code/preprocess'
 OUTDIR="/home/tfuser/data/serialized_examples/"
 
-for COLL in top50 top51; do
-    for EXPRDIR in `ls -d $DATADIR/$COLL/* | grep -v train`; do
+for COLL in top400; do
+    for EXPRDIR in `ls -d $DATADIR/$COLL/* `; do
         KEY=`echo $EXPRDIR | sed "s#$DATADIR/$COLL/##g"`
         echo $KEY
         SEROUTDIR="$OUTDIR/$COLL/$KEY"
@@ -485,7 +639,22 @@ for COLL in top50 top51; do
 done
 ```
 
-## Serialize for Top 400 and Top 401
+## Serialize for mcf10a_progression
 ```
-TODO
+DATADIR='/mnt/knowdnn_hdd/tfuser/data/expression_examples/'
+CODEDIR='/home/tfuser/code/preprocess'
+OUTDIR="/home/tfuser/data/serialized_examples/"
+
+for COLL in mcf10a_progression; do
+    echo $COLL
+    EXPRDIR="$DATADIR/$COLL/"
+    SEROUTDIR="$OUTDIR/$COLL/"
+    mkdir -p $SEROUTDIR
+    LOGFILE="$SEROUTDIR/$COLL.log"
+    CMD="python3 $CODEDIR/serialize_features.py $EXPRDIR $SEROUTDIR \
+        --label_col 1957 >> $LOGFILE"
+    echo $CMD
+    echo $CMD > $LOGFILE
+    eval $CMD
+done
 ```
