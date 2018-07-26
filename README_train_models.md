@@ -339,9 +339,3 @@ tensorboard --logdir=/home/tfuser/models/ --port 6006
 ```
 
 
-
-LOG_DIR='/home/tfuser/models/train80.ctl_cl10.top50-dm_all-cd_15-dim_975,975,975,975,975-do_0.7/final_eval_hiddenCL.ctl.top50/'
-        grep "outmatrix\[\[" $LOG_DIR/final_eval.log | sed "s#\[#\n#g" | sed "s# #\t#g" | sed "s#\]#\t#g" \
-            | sed "s#outmatrix##g" | sed '/^$/d' > $LOG_DIR/final_eval.preds
-        grep "probabilities\[\[" $LOG_DIR/final_eval.log | sed "s#\[#\n#g" | sed "s# #\t#g" | sed "s#\]#\t#g" \
-            | sed "s#outmatrix##g" | sed '/^$/d' > $LOG_DIR/final_eval.probs
