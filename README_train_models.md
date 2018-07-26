@@ -5,6 +5,9 @@ CODEDIR='/home/tfuser/code/models'
 
 for OUT_LABEL_COUNT in 50 51; do
 
+    /home/tfuser/models/train80.ctl_cl10.top51-dm_all-cd_15-dim_975,975,975,975,975-do_0.7 \
+    /home/tfuser/models/train80.ctl_cl10.top50-dm_all-cd_15-dim_975,975,975,975,975-do_0.7 \
+
     COLL_NAME="top$OUT_LABEL_COUNT"
     DATASET_NAME="train80.ctl_cl10.$COLL_NAME"
     DATA_DIR="/home/tfuser/data/serialized_examples/$COLL_NAME/$DATASET_NAME/"
@@ -71,11 +74,10 @@ for OUT_LABEL_COUNT in 50 51; do
 
     echo -e "\t$TRAINCMD"
     mkdir -p $TRAIN_DIR
-    echo $TRAINCMD > $TRAIN_DIR/training.log
-    eval time $TRAINCMD
 
-    ## final evaluations
-    for KEY in \
+#    echo $TRAINCMD > $TRAIN_DIR/training.log
+#    eval time $TRAINCMD
+
     dev05.ctl_cl10.$COLL_NAME:preds \
     train80.ctl_cl10.$COLL_NAME:stats \
     test15.ctl_cl10.$COLL_NAME:stats \
@@ -84,6 +86,11 @@ for OUT_LABEL_COUNT in 50 51; do
     test15.$COLL_NAME.$COLL_NAME:stats \
     test15.$COLL_NAME.$COLL_NAME-um:stats \
     ASC.ctl.$COLL_NAME:preds \
+
+
+    ## final evaluations
+    for KEY in \
+    hiddenCL.ctl.$COLL_NAME:preds \
     ; do
 
         EVAL_DATASET_NAME=`echo $KEY | cut -f1 -d:`
@@ -272,8 +279,11 @@ for OUT_LABEL_COUNT in 400; do
 done # COLL_NAME
 ```
 
-# evaluate MCF10A
+# evaluate MCF10A and TCGA
 ```
+#   
+
+
 CODEDIR='/home/tfuser/code/models'
 for TRAIN_DIR in \
     /home/tfuser/models/train80.ctl_cl10.top400-dm_all-cd_15-dim_978,978,978,978,978-do_0.7 \
@@ -282,17 +292,18 @@ for TRAIN_DIR in \
     ; do
 
     TRAIN_CHKPT_DIR="$TRAIN_DIR/chkpts/"
-    DATA_BATCH_SIZE="144"
     DATA_MODE="all"
     DATA_SERIALIZED="--data_serialized"
-    DATA_BATCH_NORM="--data_batch_norm"
+    DATA_BATCH_NORM="" # change for znorm inputs "--data_batch_norm"
 
     for KEY in \
-    mcf10a_progression:probs \
+    mcf10a_progression_znorm:probs:144 \
+    tcga_paired_znorm:probs:150 \
     ; do
 
         EVAL_DATASET_NAME=`echo $KEY | cut -f1 -d:`
         EVAL_RUN_MODE=`echo $KEY | cut -f2 -d:`
+        EVAL_BATCH_SIZE=`echo $KEY | cut -f3 -d:`
 
         EVAL_DATA_DIR="/home/tfuser/data/serialized_examples/$EVAL_DATASET_NAME/"
         LOG_DIR="$TRAIN_DIR/final_eval_$EVAL_DATASET_NAME"
@@ -326,3 +337,11 @@ done
 source activate tensorflow_p36
 tensorboard --logdir=/home/tfuser/models/ --port 6006
 ```
+
+
+
+LOG_DIR='/home/tfuser/models/train80.ctl_cl10.top50-dm_all-cd_15-dim_975,975,975,975,975-do_0.7/final_eval_hiddenCL.ctl.top50/'
+        grep "outmatrix\[\[" $LOG_DIR/final_eval.log | sed "s#\[#\n#g" | sed "s# #\t#g" | sed "s#\]#\t#g" \
+            | sed "s#outmatrix##g" | sed '/^$/d' > $LOG_DIR/final_eval.preds
+        grep "probabilities\[\[" $LOG_DIR/final_eval.log | sed "s#\[#\n#g" | sed "s# #\t#g" | sed "s#\]#\t#g" \
+            | sed "s#outmatrix##g" | sed '/^$/d' > $LOG_DIR/final_eval.probs

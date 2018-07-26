@@ -115,7 +115,26 @@ python3 $CODEDIR/summarize_metadata.py $OUTMETA \
     $OUTDIR/$OUTTAG.pert_inames.txt > $OUTDIR/$OUTTAG.summary.log
 ```
 
-  - 674 trt_sh exps, at least 674 per 1 cell_ids, at least 6 per 32 pert_inames
+  - 1638 trt_sh exps, at least 93 per 7 cell_ids, at least 6 per 32 pert_inames
+
+4. Select top 50 knockdown classes and keep small test cell lines:
+
+```
+DATADIR='/mnt/knowdnn_hdd/tfuser/data/filtered_metadata/trt_sh'
+CODEDIR='/home/tfuser/code/preprocess/'
+OUTDIR=$DATADIR/top50/
+mkdir -p $OUTDIR
+
+OUTTAG='top50.hiddenCL'
+OUTMETA=$OUTDIR/$OUTTAG.metadata.txt
+python3 $CODEDIR/filter_metadata.py $DATADIR/trt_sh.metadata.txt $OUTMETA \
+    -ci ASC,U2OS,HEK293T,HEKTE,SW480,SKL,MCH58 \
+    -pif $DATADIR/trt_sh.pert_inames.top50.txt > $OUTDIR/$OUTTAG.metadata.log
+python3 $CODEDIR/summarize_metadata.py $OUTMETA \
+    $OUTDIR/$OUTTAG.pert_inames.txt > $OUTDIR/$OUTTAG.summary.log
+```
+
+  - 674 trt_sh exps, at least 674 per 1 cell_ids, at least 6 per 43 pert_inames
 
 ## Bottom 4000 Knockdown Filtered
 1. Save bottom 4000 knockdown classes to file (starting from 401st):
@@ -164,6 +183,26 @@ python3 $CODEDIR/summarize_metadata.py $OUTMETA \
 
   - 7943 trt_sh exps, at least 7943 per 1 cell_ids, at least 4 per 799 pert_inames
 
+4. Select bottom 4000 knockdown classes and keep small hidden cell lines:
+
+```
+DATADIR='/mnt/knowdnn_hdd/tfuser/data/filtered_metadata/trt_sh'
+CODEDIR='/home/tfuser/code/preprocess/'
+OUTDIR=$DATADIR/b4k/
+mkdir -p $OUTDIR
+
+OUTTAG='b4k.hiddenCL'
+OUTMETA=$OUTDIR/$OUTTAG.metadata.txt
+python3 $CODEDIR/filter_metadata.py $DATADIR/trt_sh.metadata.txt $OUTMETA \
+    -ci ASC,U2OS,HEK293T,HEKTE,SW480,SKL,MCH58 \
+    -pif $DATADIR/trt_sh.pert_inames.b4k.txt > $OUTDIR/$OUTTAG.metadata.log
+python3 $CODEDIR/summarize_metadata.py $OUTMETA \
+    $OUTDIR/$OUTTAG.pert_inames.txt > $OUTDIR/$OUTTAG.summary.log
+```
+
+  - 15835 trt_sh exps, at least 71 per 7 cell_ids, at least 4 per 1111 pert_inames
+
+
 ## top 400 Knockdown Filtered
 1. Save top 400 knockdown classes to file:
 
@@ -210,6 +249,26 @@ python3 $CODEDIR/summarize_metadata.py $OUTMETA \
 
   - 3155 trt_sh exps, at least 3155 per 1 cell_ids, at least 4 per 275 pert_inames
 
+4. Select top 400 knockdown classes and keep small hidden cell lines:
+
+```
+DATADIR='/mnt/knowdnn_hdd/tfuser/data/filtered_metadata/trt_sh'
+CODEDIR='/home/tfuser/code/preprocess/'
+OUTDIR=$DATADIR/top400/
+mkdir -p $OUTDIR
+
+OUTTAG='top400.hiddenCL'
+OUTMETA=$OUTDIR/$OUTTAG.metadata.txt
+python3 $CODEDIR/filter_metadata.py $DATADIR/trt_sh.metadata.txt $OUTMETA \
+    -ci ASC,U2OS,HEK293T,HEKTE,SW480,SKL,MCH58 \
+    -pif $DATADIR/trt_sh.pert_inames.top400.txt > $OUTDIR/$OUTTAG.metadata.log
+python3 $CODEDIR/summarize_metadata.py $OUTMETA \
+    $OUTDIR/$OUTTAG.pert_inames.txt > $OUTDIR/$OUTTAG.summary.log
+```
+
+  - 6693 trt_sh exps, at least 141 per 7 cell_ids, at least 4 per 333 pert_inames
+
+
 ## Control Experiments Filtered
 1. Filter only control LINCS metadata:
 
@@ -226,7 +285,7 @@ python3 $CODEDIR/summarize_metadata.py $OUTDIR/ctl.metadata.txt \
 
   - 80935 ctl exps, at least 9 per 76 cell_ids, at least 2 per 15 pert_inames
 
-7. Select ctls for 10 largest cell lines (ASC is 11th):
+2. Select ctls for 10 largest cell lines (ASC is 11th):
 
 ```
 DATADIR='/mnt/knowdnn_hdd/tfuser/data/filtered_metadata/ctl'
@@ -241,7 +300,7 @@ python3 $CODEDIR/summarize_metadata.py $DATADIR/$OUTTAG.metadata.txt \
 
   - 72189 ctl exps, at least 2242 per 10 cell_ids, at least 88 per 13 pert_inames
 
-8. Select ctls for ASC (11th largest) cell_id:
+3. Select ctls for ASC (11th largest) cell_id:
 
 ```
 DATADIR='/mnt/knowdnn_hdd/tfuser/data/filtered_metadata/ctl'
@@ -254,6 +313,20 @@ python3 $CODEDIR/summarize_metadata.py $DATADIR/$OUTTAG.metadata.txt \
 ```
 
   - 1838 ctl exps, at least 1838 per 1 cell_ids, at least 120 per 8 pert_inames
+
+4. Select ctls for small hidden cell lines:
+
+```
+DATADIR='/mnt/knowdnn_hdd/tfuser/data/filtered_metadata/ctl'
+CODEDIR='/home/tfuser/code/preprocess/'
+OUTTAG="ctl.hiddenCL"
+python3 $CODEDIR/filter_metadata.py $DATADIR/ctl.metadata.txt \
+    $DATADIR/$OUTTAG.metadata.txt -ci ASC,U2OS,HEK293T,HEKTE,SW480,SKL,MCH58
+python3 $CODEDIR/summarize_metadata.py $DATADIR/$OUTTAG.metadata.txt \
+    $DATADIR/$OUTTAG.pert_inames.txt > $DATADIR/$OUTTAG.summary.log
+```
+
+  - 3951 ctl exps, at least 113 per 7 cell_ids, at least 7 per 9 pert_inames
 
 
 # Partition Training, dev/validation, and Testing Metadata
@@ -555,12 +628,15 @@ done
 DATADIR='/mnt/knowdnn_hdd/tfuser/data/paired_metadata/'
 CODEDIR='/home/tfuser/code/preprocess'
 GEODIR="/mnt/knowdnn_hdd/tfuser/data/from_GEO/"
-GCTXFILE="/home/tfuser/data/GSE92742_Broad_LINCS_Level3_INF_mlr12k_n1319138x12328.top401.gctx"
+#GCTXFILE="/home/tfuser/data/GSE92742_Broad_LINCS_Level3_INF_mlr12k_n1319138x12328.top401.gctx"
+GCTXFILE="/home/tfuser/data/GSE92742_Broad_LINCS_Level3_INF_mlr12k_n1319138x12328.gctx"
 PROBEFILE="$GEODIR/lincs_meta/GSE92742_Broad_LINCS_gene_info.l1000.txt"
 OUTDIR="/mnt/knowdnn_hdd/tfuser/data/expression_examples/"
 
-for COLL in top50 top51; do
-    for PAIRFILE in `ls $DATADIR/$COLL/*txt`; do
+#for COLL in top50 top51; do
+#    for PAIRFILE in `ls $DATADIR/$COLL/*txt`; do
+for COLL in top50 ; do
+    for PAIRFILE in `ls $DATADIR/$COLL/hidden*txt`; do
         KEY=`echo $PAIRFILE | sed "s#$DATADIR/$COLL/##g" | sed "s#.txt##g"`
         echo $KEY $FILE
         PAIROUTDIR="$OUTDIR/$COLL/$KEY"
@@ -605,15 +681,27 @@ for COLL in top401; do
 done
 ```
 
-## Create MCF10A dataset
+## Create MCF10A and TCGA dataset
 ```
-# copy from final tab of mch10a-original-data.xlsx into /mnt/knowdnn_hdd/tfuser/data/expression_examples/mcf10a_progression/file0.data
+OUTDIR='/mnt/knowdnn_hdd/tfuser/data/expression_examples/mcf10a_progression_znorm/'
+mkdir -p  $OUTDIR
+# copy from final tab of mcf10a-original-data.xlsx into $OUTDIR/file0.data
 # save info.yml
 echo "class_column: 1957
 num_examples: 144
 num_features: 1956
 num_files: 1
-num_metadata: 4" > /mnt/knowdnn_hdd/tfuser/data/expression_examples/mcf10a_progression/info.yml
+num_metadata: 4" > $OUTDIR/info.yml
+
+OUTDIR='/mnt/knowdnn_hdd/tfuser/data/expression_examples/tcga_paired_znorm/'
+mkdir -p  $OUTDIR
+# copy from final tab of cgc_tcga_pairs.xlsx into $OUTDIR/file0.data
+# save info.yml
+echo "class_column: 1957
+num_examples: 900
+num_features: 1956
+num_files: 1
+num_metadata: 13" > $OUTDIR/info.yml
 ```
 
 # Serialize Features Files
@@ -623,8 +711,10 @@ DATADIR='/mnt/knowdnn_hdd/tfuser/data/expression_examples/'
 CODEDIR='/home/tfuser/code/preprocess'
 OUTDIR="/home/tfuser/data/serialized_examples/"
 
-for COLL in top400; do
-    for EXPRDIR in `ls -d $DATADIR/$COLL/* `; do
+#for COLL in top50 top51 top400 top401; do
+#    for EXPRDIR in `ls -d $DATADIR/$COLL/* `; do
+for COLL in top50; do
+    for EXPRDIR in `ls -d $DATADIR/$COLL/hidden* `; do
         KEY=`echo $EXPRDIR | sed "s#$DATADIR/$COLL/##g"`
         echo $KEY
         SEROUTDIR="$OUTDIR/$COLL/$KEY"
@@ -639,13 +729,13 @@ for COLL in top400; do
 done
 ```
 
-## Serialize for mcf10a_progression
+## Serialize for mcf10a_progression and tcga_paired_znorm
 ```
 DATADIR='/mnt/knowdnn_hdd/tfuser/data/expression_examples/'
 CODEDIR='/home/tfuser/code/preprocess'
 OUTDIR="/home/tfuser/data/serialized_examples/"
 
-for COLL in mcf10a_progression; do
+for COLL in tcga_paired_znorm; do
     echo $COLL
     EXPRDIR="$DATADIR/$COLL/"
     SEROUTDIR="$OUTDIR/$COLL/"
