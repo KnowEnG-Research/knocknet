@@ -1,7 +1,8 @@
 # KnockNet - Modeling changes in transcriptomic state from a massive library of cellular signatures
-Charles Blatti[blatti@illinois.edu], Casey Hanson[crhanso2@illinois.edu], Bryce Kille[kille2@illinois.edu], and Saurabh Sinha[sinhas@illinois.edu]
-KnowEnG BD2K Center of Excellence
-University of Illinois Urbana-Champaign
+Charles Blatti[blatti@illinois.edu], Casey Hanson[crhanso2@illinois.edu], Bryce Kille[kille2@illinois.edu], and Saurabh Sinha[sinhas@illinois.edu] 
+
+KnowEnG BD2K Center of Excellence  
+University of Illinois Urbana-Champaign  
 
 ## Table of Contents
 1. [Motivation](#motivation)
